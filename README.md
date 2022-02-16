@@ -1,205 +1,43 @@
-NowStreaming
-============
+# Custom Fork of the NowStreaming Firefox Add-On by [joaopsys](https://github.com/joaopsys)
 
-https://chrome.google.com/webstore/detail/nowstreaming/cfdokgjlnihoblidldhdomakblbaegim
+## Downloading & Building:
 
-https://addons.mozilla.org/en-US/firefox/addon/nowstreaming-twitch/
+Download the source and zip it.
 
-Manage your favorite streamers, get instant notifications when they come online, and much more!
+`NowStreaming-Firefox$ zip nsfirefox.zip * -r`
 
-NowStreaming is an extension that will greatly improve the way you manage your favorite Twitch streams.
+ ---
+**NOTE**
 
-In addition to having all your favorite streamers in one place, NowStreaming will instantly notify you whenever they go online.
+Make sure to run the command within the `NowStreaming-Firefox` directory.
 
-First Steps:
-- Install the extension! :)
-- Hit the NowStreaming icon
-- Authenticate with Twitch
-- Start following a channel using the text box or import your follow list from Twitch in the Options tab.
-- Those channels will now appear on your NowStreaming Streams tab when they are live and you will get notifications every time that happens!
+---
 
-If you don't want to receive notifications, you can always disable it in the Options Menu.
+Coming soon: Alternatively you can download a release with the packaged zip.
 
-Anything you do on NowStreaming *WILL NOT* affect your Twitch account.
+## Installing:
 
-Feel free to comment about things you like/don't like, I'll give it a look.
+As I will not distribute this addon in the official firefox addon store, you can only install the *unsigned* version by sideloading it.
+This is only possible in the Nightly and Developer Version of Firefox.
 
+To sideload the addon goto [about:config](http://about:config) and set `xpinstall.signatures.required` to `false`.
+
+-----
+
+Changes made to the fork:
+
+- remove footer from the popout
+- remove fast follow from popout
+- remove unfollow all, disconnect twitch, export, import from popout
+- add new gameicons for TrackMania, Science & Technology
+- set all gameicon image sizes to have a width of 64px, keeping aspect-ratio
+- changed addon icon
+
+----
+
+Original Credits:
 If you like this extension and want to support me, you can Donate through PayPal, I'll be very grateful:
 https://www.paypal.me/joaopsys
 
 Big thank you to Joca64 for the visual improvements and overall contributions: https://github.com/Joca64
 Big thank you to Pedro for the new logo: https://github.com/pedroordep
-
-==============================
-Changelog:
-
-3.1:
-- Remove HTTP calls
-- Add missing game icons
-
-3.0:
-- Major update for Twitch Helix API compatibility
-- Update to Manifest v3 (Chrome version)
-- Fix limitation of maximum of 100 online streamers
-- Implement OAuth authentication with Twitch
-- Code cleanup and slight optimization
-- Allow sorting on the following list page
-- Fix bug when parsing a stream URL with referrals
-- Update JQuery, Pure CSS and FontAwesome
-- Fix minor typos
-- Update game icons
-
-2.2:
-- Remember last sorting method and sorting order
-- Hotfix sync/import from twitch due to a twitch API bug reported in https://github.com/twitchdev/issues/issues/237
-
-2.1.2:
-- Set a fixed max height for the popup window
-- Fix a bug where spaces could be added to streamer's usernames
-
-2.1.1:
-- Minor fixes
-
-2.1.0:
-- New feature: Dark mode
-- New logo!
-- Improve sorting to be more intuitive
-
-2.0.0:
-- Visual and functional improvements to the popup layout
-- Implements sorting on streamer name, game, viewers and uptime by clicking the respective column
-- Fixes a bug that caused the stream's uptime to be miscalculated
-- Fix various sanitization issues
-- Other minor bug fixes
-
-1.8.1:
-- Minor fixes to icon loading on Firefox
-
-1.8.0:
-- Firefox version released!
-- Fix a bug where clicking on notifications would open an about:blank tab
-- Update some functions to cope with deprecations
-
-1.7.5:
-- Update game icons
-- Update jquery
-
-1.7.4:
-- Edit notifications title so it has more space for the channel name
-
-1.7.3:
-- Adapt the following button for the new Twitch Beta URL
-
-1.7.2:
-- Update extension name and description on Chrome Webstore
-
-1.7.1:
-- Change the way icons are loaded to avoid errors
-- Fix wrapping on uptime
-- Fix wrong popout URLs
-
-1.7:
-- Reorganize live streamers table to contain stream uptime
-
-1.6.2:
-- Fixed a bug when persisting notification state per channel after an extension reload
-
-1.6.1:
-- Added game icons and fixed a typo
-
-1.6:
-- Fix a critical bug regarding icon file names
-
-1.5:
-- Notifications are now configurable per channel
-
-1.4:
-- Major code improvements and code cleanup
-- Removed all XHR requests
-- Fixed bug when syncing Twitch follows (API inconsistency)
-- Updated all Twitch API calls for API v5
-- Updated all CDNs - jquery, pure CSS, fontawesome
-- Fixed insecure (http) Twitch URL
-- Fixed and added more game icons
-
-1.3:
-- Update Twitch API calls to enforce Client ID.
-- More updates coming soon :)
-
-1.2:
-- Corrected font path in the following list
-- Added more game icons and NS icons for the extensions page
-- Fixed a case sensitive situation when following streamers
-
-1.1:
-- Changed the font to a more suitable one.
-
-(Public Release) 1.0:
-- Redesign of the popup window (Thanks JN!)
-- Fixed a rare bug where the stream title and url would be undefined
-- Added game icons for some recently popular games
-
-(Public Release) 0.81:
-- Brand new and more polished logo (Thank you Igor! https://www.behance.net/igorcarraco)
-- Major bug fix (Thank you JN)
-- More game icons
-
-(Public Release) 0.7:
-- Updated description
-- Added a Fast Follow option
-- Added a Stream Popout option
-- Added a donate button at the end of the popup window :)
-- Changed the submit buttons
-- 'Sync with Twitch' renamed to 'Import from Twitch'
-- Updated some messages and tips
-- Fixed a bug where some notifications would be sent after importing data
-
-(Open Beta) 0.6:
-- Version number added to the popup
-- New Logo!
-- Some improvements to icon loading
-- Minor bug fixes
-- Improved help messages
-- You can now go to the streamer's twitch channel even if they're not streaming
-- Improved follow functions
-- Fixed notifications being sent more than once for the same stream
-- More game icons :D
-- Added hidden easter egg
-- Stream title now shows when you mouse hover an online streamer
-
-(Closed Beta) 0.5:
-- Minor bug fixes
-- Added export/import local data. You can now keep your favorite streamers even if you format your hard drive :)
-- Major bug fix for users following tons of people on twitch
-- Fixed a major core bug
-- Online streams limit raised to 100
-- Added options - you can now choose what the Sync button does and opt to not get notifications.
-
-(Closed Beta) 0.4:
-- Many core changes to how/what data is stored
-- Popup window got a facelift (added css, game, viewers, unfollow options)
-- Some minor bug fixes
-- Added some error/help messages that were missing
-- Added option to Sync with Twitch
-- Added option to unfollow everyone
-
-(Closed Alpha) 0.3:
-- Badge text added to the icon, now it shows the number of online streamers
-- Alpha popup page (not to say ugly) when user clicks icon, showing current streamers and follows
-- Full refresh when user follows or unfollows
-
-(Closed Alpha) 0.2:
-- 'background' permission removed - This was non-sense
-- Notifications are now awesome
-- Sync storage is only used at start and on follow/unfollow, everything else is local
-- 1 request to twitch API per minute (instead of 1 per follow)
-- Updates and notifies when user starts chrome
-- LOTS of bug fixes
-
-(Closed Alpha) 0.1:
-- First Alpha version
-- Notifications 'kinda' working (super ugly, 2 buttons, urls not matching notification)
-- Lots of bugs in sync and local storages
-- Follow/Unfollow working but totally out of sync
-- Lots of requests, lots of storage writes
-- Lots of nulls everywhere
