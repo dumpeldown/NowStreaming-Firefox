@@ -25,7 +25,7 @@
 		</div>
 	</div>
 	<div class="streamersDiv" id="streamersDiv">
-		<div class="noStreams" id="noStreams">There are <b>no streams online.</b></b></div>
+		<div class="noStreams" id="noStreams">There are currently no streams online.</div>
 		<!-- <div class="loadingStreams" id="loadingStreams"><i class="fa fa-spinner fa-spin fa-5x"></i></div> -->
 		<div class="streamersTableDiv" id="streamersTableDiv">
 		<table class="streamersTable pure-table pure-table-horizontal" id="streamersTable">
@@ -42,18 +42,6 @@
 		</div>
 	</div>
 	
-	<div class="fastFollow" id="fastFollow">
-		<input
-			id="fastFollowInput"
-			maxlength=26
-			class="inputclass"
-			type="text"
-			placeholder="Insert a Twitch streamer name to follow them"
-			size="10"/>
-		<i id="submitFastFollow" class="fa fa-check fa-lg"></i>
-	</div>
-
-	<div class="fast-follow-message" id="fastFollowMessage"></div>
 
 	<div class="no-following" id="noFollowing">
 		<div class="no-following-instructions">You're not following any streamer.</div>
@@ -116,28 +104,6 @@
 			
 		</div>
 
-		<div class="masterTooltip unfollow-all unfollowAllMessage" id="unfollowAll" title="This will unfollow every user you follow on NowStreaming.">
-			<i class="fa fa-user-times fa-lg"></i>
-			<div>Unfollow All</div>
-			<div class="small-text">(Will <b>NOT</b> affect your Twitch account!)</div>
-		</div>
-
-		<div class="masterTooltip disconnect-twitch disconnectMessage" id="disconnectTwitch" title="This will disconnect your Twitch account from NowStreaming.">
-			<i class="fab fa-twitch fa-lg"></i>
-			<div>Disconnect from Twitch</div>
-		</div>
-		
-		<div class="export-import">
-			<div class="masterTooltip export" id="exportFollowingButton" title="This will export the list of streamers you follow so that you can import it later.">
-				<i class="fa fa-upload fa-lg"></i>
-				<div>Export Data</div>
-			</div>
-			<div class="masterTooltip import" id="importFollowingButton" title="This will import a list of streamers, exported via the 'Export Data' option.">
-				<i class="fa fa-download fa-lg"></i>
-				<div>Import data</div>
-			</div>
-		</div>
-		
 		<div class="text-box" id="textBox">
 			<div class="instructions">(Make sure you copy everything correctly or it won't work!)</div>
 			<textarea id="exportBox" type="text"></textarea>
@@ -152,11 +118,4 @@
 
 	</div>
 	</body>
-	<footer>
-		All game icons (if applicable) belong to their respective companies/owners.
-		<br>
-		Feel free to <a class="donate" target="_blank" href="https://www.paypal.me/joaopsys">Donate</a> if you like this extension. Or don't, I know you're not reading this.
-		<br>
-		<div id="versionDiv">V. </div>
-	</footer>
 </html>
