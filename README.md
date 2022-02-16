@@ -4,7 +4,7 @@
 
 Download the source and zip it.
 
-`NowStreaming-Firefox$ zip nsfirefox.zip * -r`
+`NowStreaming-Firefox$ zip ../nsfirefox.zip * -r`
 
  ---
 **NOTE**
