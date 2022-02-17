@@ -509,10 +509,7 @@ function syncWithTwitch(pagination, storage, add){
 	}
 	var user = document.getElementById("syncWithTwitchInput").value;
 	user = user.toLowerCase();
-	if (user == "mlg360noscope420blazeit"){
-		browser.tabs.create({url: "https://youtu.be/kHYZDveT46c"});
-		return;
-	}
+	
 	// If user selected 'add' instead of replace, we'll call this function again with his current follows
 	if (storage == null){
 		browser.storage.local.get({streamers:{}, 'notifications':true}, function (result) {
