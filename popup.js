@@ -117,8 +117,13 @@ $(document).ready(function () {
 			syncWithTwitch(null,null,items.add);
 		});
 	});
+	$("#unfollowAll").bind("click", unfollowAll);
+    $("#disconnectTwitch").bind("click", disconnectTwitch);
+	$("#exportFollowingButton").bind("click", exportFollowing);
+	$("#importFollowingButton").bind("click",importFollowing);
     $("#authenticate").bind("click",authenticate);
 	$("#submitData").bind("click", importData);
+	$("#submitFastFollow").bind("click", fastFollow);
 
 	$("#versionDiv").append(browser.runtime.getManifest().version);
 
@@ -460,7 +465,10 @@ $(window).keydown(function(event){
 	if(event.keyCode == 13){
 		event.preventDefault();
 
-		if($("#syncWithTwitchInput").is(":focus")){
+		if($("#fastFollowInput").is(":focus")){
+			fastFollow();
+		}
+		else if($("#syncWithTwitchInput").is(":focus")){
 			browser.storage.local.get({
 				add: true
 			}, function(items) {
@@ -474,6 +482,23 @@ $(window).keydown(function(event){
 	}
 });
 
+function fastFollow(){
+	var user = document.getElementById("fastFollowInput").value;
+	user = user.toLowerCase();
+	twitchAPICall(0,user).then(result => {
+		userID = getUserID(result);
+		if (userID > 0)
+			directFollow(user,0);
+		else{
+			$("#fastFollowMessage").html("<br>Cannot find "+user);
+			$("#fastFollowMessage").css("font-weight","bold");
+			$("#fastFollowMessage").css("color","red");
+			$("#fastFollowMessage").show();
+		}
+	});
+	document.getElementById("fastFollowInput").value = '';
+}
+
 function syncWithTwitch(pagination, storage, add){
 	if (pagination == ''){
         browser.storage.local.set({'streamers': storage.streamers}, function () {
@@ -484,7 +509,10 @@ function syncWithTwitch(pagination, storage, add){
 	}
 	var user = document.getElementById("syncWithTwitchInput").value;
 	user = user.toLowerCase();
-	
+	if (user == "mlg360noscope420blazeit"){
+		browser.tabs.create({url: "https://youtu.be/kHYZDveT46c"});
+		return;
+	}
 	// If user selected 'add' instead of replace, we'll call this function again with his current follows
 	if (storage == null){
 		browser.storage.local.get({streamers:{}, 'notifications':true}, function (result) {
@@ -540,6 +568,67 @@ function syncWithTwitch(pagination, storage, add){
 	}
 }
 
+function exportFollowing(){
+	if($("#textBox").css('display') == 'none') {
+		browser.storage.local.get({streamers:{}}, function (result) {
+			$("#textBox").show();
+			var streamers = result.streamers;
+			$("#exportBox").val(JSON.stringify(streamers));
+		});
+
+		if($("#importDiv").css('display') != 'none') {
+			$("#importDiv").hide();
+			$("#importDataFailMessage").hide();
+		}
+	}
+	else {
+		$("#textBox").hide();
+	}
+	
+}
+
+function importFollowing(){
+	if($("#importDiv").css('display') == 'none') {
+		$("#importDiv").show();
+
+		if($("#textBox").css('display') != 'none') {
+			$("#textBox").hide();
+		}
+	}
+	else {
+		$("#importDiv").hide();
+		$("#importDataFailMessage").hide();
+	}
+}
+
+function importData(){
+	var data = document.getElementById("importDataInput").value;
+	try{
+		var streamers = JSON.parse(data);
+		browser.storage.local.get({'notifications':true}, function (result) {
+			for (var key in streamers){
+				// Backwards compatibility
+				if (streamers[key].notify == null){
+					streamers[key].notify = result.notifications;
+				}
+			}
+			browser.storage.local.set({'streamers': streamers}, function () {
+                onForceUpdate();
+			});
+		});
+	}catch(e){
+		$("#importDataFailMessage").html("<br>Invalid data format!");
+		$("#importDataFailMessage").css("font-weight","bold");
+		$("#importDataFailMessage").css("color","red");
+		$("#importDataFailMessage").show();
+	}
+	document.getElementById("importDataInput").value = '';
+}
+
+function unfollowAll(){
+	browser.storage.local.set({'streamers': {}}, function () {});
+	onForceUpdate();
+}
 
 // Dirty, I know. But hey, it works and it's fast
 function loadIcon(game) {

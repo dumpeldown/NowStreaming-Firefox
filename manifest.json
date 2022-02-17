@@ -6,8 +6,8 @@
     }
   },
   "manifest_version": 2,
-  "name": "NowStreaming - Twitch (custom)",
-  "description": "Custom NowStreaming Fork by dumpeldown",
+  "name": "NowStreaming - Twitch",
+  "description": "Manage your favorite Twitch streamers, get instant notifications when they come online, and much more!",
   "version": "3.1",
   "author": "Jota",
   "background": {
