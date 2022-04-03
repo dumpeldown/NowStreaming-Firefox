@@ -24,6 +24,11 @@ To sideload the addon goto [about:config](http://about:config) and set `xpinstal
 
 -----
 
+## Contributing:
+
+I will accept pull requests which do not interfere with my preferred usage of this addon. Be welcomed to fork and create your own custom version.
+Adding new game icons for *new* or *rather unknown* games are always gratefully taken in.
+
 Changes made to the fork:
 
 - remove footer from the popout
