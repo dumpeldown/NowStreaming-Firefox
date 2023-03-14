@@ -35,7 +35,7 @@ Changes made to the fork:
 
 ----
 
-Original Credits:
+Original Credits:   
 If you like this extension and want to support me, you can Donate through PayPal, I'll be very grateful:
 https://www.paypal.me/joaopsys
 

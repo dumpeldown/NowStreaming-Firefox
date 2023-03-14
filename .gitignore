@@ -1,1 +1,4 @@
 .idea/
+/addon.zip
+zip.cmd
+zipExclude.txt
