@@ -144,7 +144,7 @@ function disconnectTwitch(){
 
 // 0 = streamer, 1 = game, 2 = viewers, 3 = uptime
 function updateTable() {
-	browser.storage.local.get({sortMethod: {}, streamers:{}, access_token: ''}, function (result) {
+	browser.storage.local.get({sortMethod: {}, streamers:{}, access_token: ''}, async function (result) {
 		streamersDict = result.streamers;
 		// Creating an array based on the dictionary list for it to be sorted
 		streamersArray = Object.keys(streamersDict).map(function(key) {
@@ -244,7 +244,7 @@ function updateTable() {
 					+sanitize(streamers[key][1]["title"])+"\" class=\"streamerpage masterTooltip\" href=\""
 					+sanitize(streamers[key][1]["url"], defaultpage+key)+"\" target=\"_blank\">"
 					+sanitize(streamers[key][0])+"</a></td><td><img src=\""
-					+loadIcon(streamers[key][1]["game"])+"\" title=\""
+					+await loadIcon(streamers[key][1]["game"])+"\" title=\""
 					+sanitize(streamers[key][1]["game"])+"\" class=\"masterTooltip\" width=\"30\" height=\"30\"/></td><td><span class=\"viewersclass\">"
 					+streamers[key][1]["viewers"]+"</span></td><td nowrap><span class=\"uptimeclass\">"
 					+getUptime(streamers[key][1]["created_at"])+"</span></td></tr>");
@@ -254,7 +254,7 @@ function updateTable() {
 					+sanitize(streamers[key][1]["title"])+"\" class=\"streamerpage masterTooltip\" href=\""
 					+sanitize(streamers[key][1]["url"], defaultpage+key)+"\" target=\"_blank\">"
 					+sanitize(streamers[key][0])+"</a></td><td><img src=\""
-					+loadIcon(streamers[key][1]["game"])+"\" title=\""
+					+await loadIcon(streamers[key][1]["game"])+"\" title=\""
 					+sanitize(streamers[key][1]["game"])+"\" class=\"masterTooltip\" width=\"30\" height=\"30\"/></td><td><span class=\"viewersclass\">"
 					+streamers[key][1]["viewers"]+"</span></td><td nowrap><span class=\"uptimeclass\">"
 					+getUptime(streamers[key][1]["created_at"])+"</span></td></tr>");
@@ -643,16 +643,79 @@ function unfollowAll(){
 	onForceUpdate();
 }
 
-// Dirty, I know. But hey, it works and it's fast
-function loadIcon(game) {
-	var allowedIcons = ["hitmanworldofassassination.png","trackmania.png", "science&technology.png", "apexlegends.png", "archeage.png", "asmr.png", "battlefield3.png", "battlefield4.png", "callofdutyblackopsii.png", "callofdutyghosts.png", "chess.png", "counter-strikeglobaloffensive.png", "darksoulsii.png", "dayz.png", "destiny.png", "diabloiii.png", "diabloiiireaperofsouls.png", "don'tstarve.png", "dota2.png", "evolve.png", "escapefromtarkov.png", "justchatting.png", "fortnite.png", "finalfantasyxivonline.png", "garry'smod.png", "grandtheftautov.png", "guildwars2.png", "h1z1justsurvive.png", "h1z1kingofthekill.png", "hearthstone.png", "heroesofthestorm.png", "hades.png", "leagueoflegends.png", "left4dead2.png", "lostark.png", "lethalleague.png", "lifeisfeudalyourown.png", "magicthegathering.png", "mariokart8.png", "mariokart8deluxe.png", "newworld.png", "middle-earthshadowofmordor.png", "minecraft.png", "music.png", "osu!.png", "outlast.png", "overwatch.png", "pathofexile.png", "payday2.png", "playerunknown'sbattlegrounds.png", "poker.png", "rift.png", "rocketleague.png", "runescape.png", "rust.png", "smite.png", "starcraftii.png", "thebindingofisaac.png", "thebindingofisaacrebirth.png", "thebindingofisaacrepentance.png", "supersmashbros.ultimate.png", "supersmashbros.melee.png", "callofdutywarzone.png", "bloodborne.png", "projectzomboid.png", "theelderscrollsvskyrim.png", "theevilwithin.png", "thesims4.png", "vrchat.png", "valorant.png", "teamfighttactics.png", "deadbydaylight.png", "thewalkingdead.png", "warframe.png", "wildstar.png", "worldoftanks.png", "worldofwarcraft.png"];
-	var generatedIcon = game.replace(/\:| /g,'').toLowerCase()+".png";
+// Asynconously Load the icon for the game from IGDB API as https url
+// to avoid wrong games found when using "search by name", we use the total_rating to filter for the probably correct game
+// some games icons are hardcoded because they are not found in IGDB
+// If the game is not found, return the default icon
+// once the icon is loaded, set the icon_url in the local browser storage
+async function loadIcon(game) {
+	const base_url = "https://api.igdb.com/v4/";
+
+	// INSERT YOUR OWN CLIENT-ID AND AUTHORIZATION
+	// see https://api-docs.igdb.com/#getting-started for more information
+	var myHeaders = new Headers();
+	myHeaders.append("Client-ID", "xxx");
+	myHeaders.append("Authorization", "Bearer xxx");
+	myHeaders.append("Content-Type", "text/plain");
+
+	// hardcode non game related icons
+	// no need to put those in the local storage
+	if (game.toLowerCase().includes("software")) return "gameicons/softwareandgamedevelopment.png";
+	if (game.toLowerCase().includes("science")) return "gameicons/science&technology.png";
+	if (game.toLowerCase().includes("chess")) return "gameicons/chess.png";
+	if (game.toLowerCase().includes("sports")) return "gameicons/sports.png";
+	if (game.toLowerCase().includes("art")) return "gameicons/art.png";
+	if (game.toLowerCase().includes("music")) return "gameicons/music.png";
+	if (game.toLowerCase().includes("chatting")) return "gameicons/justchatting.png";
 
 	
-	if (allowedIcons.includes(generatedIcon))
-		return "gameicons/"+generatedIcon;
-	else
-		return "icon.png";
+	// js async/await fuckery
+	// if url is found in local storage for key=game, then return
+	// else, make new api call
+	var cache_url = await getURLfromCache(game)
+	if (cache_url != null) {
+		return cache_url;
+	}
+
+	// post request body as plain text
+	var raw = "search \"" + game +"\";fields cover.url,name;limit 1;where total_rating > 70;";
+
+	var requestOptions = {
+		method: 'POST',
+		headers: myHeaders,
+		body: raw,
+		redirect: 'follow',
+		cache: 'force-cache'	//once the icon is loaded, it will be cached, as it is unlikely that the icon will change
+	};
+
+	return fetch(base_url+"games", requestOptions)
+		.then((response) => {
+			console.log(response.status)
+			return response.json();
+		})
+		.then((data) => {
+			// build usable url from api data and store in browser storage
+			var url = "https://"+(data[0].cover.url).substring(2);
+			browser.storage.local.set({[game]: url})
+			return url;
+		})
+		.catch((error) => {
+			console.log('error', error);
+			// if api returns no results, return default/unknown icon
+			return "gameicons/unknown.png";
+		});
+}
+
+async function getURLfromCache(key) {
+	// try to find url in local storage by key=game
+	// may return null if not found
+	return browser.storage.local.get(key)
+	.then((result) => {
+		return result[key];
+	})
+	.catch((error) => {
+		console.log('error', error);
+	});
 }
 
 function onForceUpdate(){

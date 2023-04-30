@@ -31,8 +31,10 @@
     "alarms",
     "storage",
     "identity",
+    
     "https://api.twitch.tv/*",
     "https://id.twitch.tv/*",
-    "https://*.jtvnw.net/*"
+    "https://*.jtvnw.net/*",
+    "https://api.igdb.com/*"
   ]
 }
