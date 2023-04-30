@@ -660,21 +660,27 @@ async function loadIcon(game) {
 
 	// hardcode non game related icons
 	// no need to put those in the local storage
-	if (game.toLowerCase().includes("software")) return "gameicons/softwareandgamedevelopment.png";
-	if (game.toLowerCase().includes("science")) return "gameicons/science&technology.png";
-	if (game.toLowerCase().includes("chess")) return "gameicons/chess.png";
-	if (game.toLowerCase().includes("sports")) return "gameicons/sports.png";
-	if (game.toLowerCase().includes("art")) return "gameicons/art.png";
-	if (game.toLowerCase().includes("music")) return "gameicons/music.png";
-	if (game.toLowerCase().includes("chatting")) return "gameicons/justchatting.png";
-
+	if (game.toLowerCase().includes("software")
+		|| game.toLowerCase().includes("science")
+		|| game.toLowerCase().includes("chess") 
+		|| game.toLowerCase().includes("sports")
+		// "art" collides with game called "Wartales FIXME"
+		|| game.toLowerCase().includes("art")
+		|| game.toLowerCase().includes("music")
+		|| game.toLowerCase().includes("chatting")
+		|| game.toLowerCase().includes("podcast"))
+	{
+		console.log("non game related icon found in gameicons folder for: "+game)
+		return "gameicons/"+game.toLowerCase().replace(/ /g,'')+".png";
+	};
 	
 	// js async/await fuckery
 	// if url is found in local storage for key=game, then return
 	// else, make new api call
-	var cache_url = await getURLfromCache(game)
-	if (cache_url != null) {
-		return cache_url;
+	var local_storage_url = await getURLfromCache(game)
+	if (local_storage_url != null) {
+		console.log("found url in local storage for game "+game)
+		return local_storage_url;
 	}
 
 	// post request body as plain text
@@ -690,18 +696,19 @@ async function loadIcon(game) {
 
 	return fetch(base_url+"games", requestOptions)
 		.then((response) => {
-			console.log(response.status)
 			return response.json();
 		})
 		.then((data) => {
+			console.log(JSON.stringify(data, null, 2)); // spacing level = 2
 			// build usable url from api data and store in browser storage
 			var url = "https://"+(data[0].cover.url).substring(2);
 			browser.storage.local.set({[game]: url})
 			return url;
 		})
 		.catch((error) => {
+			// if api returns no results, return default/unknown icon, log to console and alert user.
 			console.log('error', error);
-			// if api returns no results, return default/unknown icon
+			console.log("No game icon found in local gameicons or IGDB for "+game+". \nPlease report this to the developer.")
 			return "gameicons/unknown.png";
 		});
 }
