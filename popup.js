@@ -267,8 +267,6 @@ function updateTable() {
 		$(".masterTooltip").bind("mouseleave", hideTooltip);
 		$(".masterTooltip").bind("mousemove", updateTooltip);
 		
-		$(".popout").bind("click",popoutStream);
-
 		$("#loadingStreams").hide();
 
 		if (nstreams <= 0 && nfollowing > 0){
@@ -397,12 +395,6 @@ function updateSortIcons(selectedSort, descendingOrder) {
 	else {
 		$(columnName).append("<i class=\"sortIcon fas fa-sort-up\"></i>");
 	}
-}
-
-function popoutStream(e){
-	var url = $(this).next().attr('href');
-	window.open(url+"/popout", url, "height=600,width=850");
-	return false;
 }
 
 function showTooltip(e){
