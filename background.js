@@ -1,4 +1,3 @@
-//browser.browserAction.onClicked.addListener(click);
 browser.alarms.create({periodInMinutes: 1});
 var appClientID = "tn2qigcd7zaj1ivt1xbhw0fl2y99c4y";
 var OAuthState = getOAuthState();
@@ -270,14 +269,6 @@ async function twitchAPIBackgroundCall(type, channels){
     });
 	return response.json();
 }
-/* This was needed when Twitch forced the API to accept IDs only instead of usernames
-function getUserIDBatch(result){
-	ids = []
-	for (var i in result.data){
-		ids.push(result.data[i].id);
-	}
-	return ids;
-}*/
 
 function updateCore(is_first_run,callback) {
     browser.storage.local.get({access_token:''}, function (result) {
@@ -303,25 +294,6 @@ function updateCore(is_first_run,callback) {
 					callback();
 					return;
 				}
-
-                /* This was needed when Twitch forced the API to accept IDs only instead of usernames
-                var urlAppend="";
-                var idsArray=[];
-                var processedCalls=0;
-                var totalCalls = Math.ceil(streamersArray.length/100);
-				streamersArray.forEach(function(listItem, index){
-					urlAppend+=listItem+",";
-					if ( (index != 0 && index % 99 == 0) || index == streamersArray.length - 1){
-						twitchAPIBackgroundCall(0, urlAppend.slice(0,-1)).done(function (json) {
-							idsArray = $.merge(idsArray, getUserIDBatch(json));
-							processedCalls++;
-							if (totalCalls == processedCalls){
-								getStreams();
-							}
-						});
-						urlAppend = "";
-					}
-				});*/
 
                 var streamersArray=Object.keys(streamers);
                 getStreams();
