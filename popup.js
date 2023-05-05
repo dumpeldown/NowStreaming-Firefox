@@ -700,10 +700,35 @@ async function loadIcon(game) {
 		.catch((error) => {
 			// if api returns no results, return default/unknown icon, log to console and alert user.
 			console.log('error', error);
-			console.log("No game icon found in local gameicons or IGDB for "+game+". \nPlease report this to the developer.")
-			return "gameicons/unknown.png";
+			console.log("No game icon found on IGDB for "+game+" with total_rating > 70")
+			console.log("Now trying with no specific total_rating filter")
+			var raw = "search \"" + game +"\";fields cover.url,name;limit 1;";
+			var requestOptions = {
+				method: 'POST',
+				headers: myHeaders,
+				body: raw,
+				redirect: 'follow',
+				cache: 'force-cache'
+			};
+			return fetch(base_url+"games", requestOptions)
+				.then((response) => {
+					return response.json();
+				})
+				.then((data) => {
+					console.log(JSON.stringify(data, null, 2));
+					var url = "https://"+(data[0].cover.url).substring(2);
+					browser.storage.local.set({[game]: url})
+					return url;
+				})
+				.catch((error) => {
+					console.log('error', error);
+					console.log("No game icon found on IGDB for "+game+" at all, sorry :(")
+					// if api returns no results at all, return default/unknown icon and cache it.
+					browser.storage.local.set({[game]: "gameicons/unknown.png"})
+					return "gameicons/unknown.png";
+				});
 		});
-}
+	}
 
 async function getURLfromCache(key) {
 	// try to find url in local storage by key=game
