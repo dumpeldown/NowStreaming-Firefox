@@ -239,8 +239,8 @@ function updateTable() {
 				$("#streamersTableDiv").show();
 				$("#streamersTable").show();
 				if (nstreams % 2 == 0)
-					$("#streamersTable").append("<tr class=\" list-row table-even\" id=\"row"
-					+sanitize(streamers[key][0])+"\"><td nowrap><i title=\"Popout this stream\" class=\"masterTooltip popout fas fa-share-square fa-lg\"></i><a title=\""
+					$("#streamersTable").append("<tr style=\"text-align: center\" class=\" list-row table-even\" id=\"row"
+					+sanitize(streamers[key][0])+"\"><td nowrap><a title=\""
 					+sanitize(streamers[key][1]["title"])+"\" class=\"streamerpage masterTooltip\" href=\""
 					+sanitize(streamers[key][1]["url"], defaultpage+key)+"\" target=\"_blank\">"
 					+sanitize(streamers[key][0])+"</a></td><td><img src=\""
@@ -249,8 +249,8 @@ function updateTable() {
 					+streamers[key][1]["viewers"]+"</span></td><td nowrap><span class=\"uptimeclass\">"
 					+getUptime(streamers[key][1]["created_at"])+"</span></td></tr>");
 				else
-					$("#streamersTable").append("<tr class=\" list-row table-odd\" id=\"row"
-					+sanitize(streamers[key][0])+"\"><td nowrap><i title=\"Popout this stream\" class=\"masterTooltip popout fas fa-share-square fa-lg\"></i><a title=\""
+					$("#streamersTable").append("<tr style=\"text-align: center\" class=\" list-row table-odd\" id=\"row"
+					+sanitize(streamers[key][0])+"\"><td nowrap><a title=\""
 					+sanitize(streamers[key][1]["title"])+"\" class=\"streamerpage masterTooltip\" href=\""
 					+sanitize(streamers[key][1]["url"], defaultpage+key)+"\" target=\"_blank\">"
 					+sanitize(streamers[key][0])+"</a></td><td><img src=\""
