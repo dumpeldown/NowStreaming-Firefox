@@ -243,9 +243,9 @@ function updateTable() {
 					+sanitize(streamers[key][0])+"\"><td nowrap><a title=\""
 					+sanitize(streamers[key][1]["title"])+"\" class=\"streamerpage masterTooltip\" href=\""
 					+sanitize(streamers[key][1]["url"], defaultpage+key)+"\" target=\"_blank\">"
-					+sanitize(streamers[key][0])+"</a></td><td><img src=\""
+					+sanitize(streamers[key][0])+"</a></td><td><a href=\"https://www.twitch.tv/directory/category/"+(streamers[key][1]["game"]).toLowerCase().replace("&", "and").replaceAll(" ", "-")+"\"><img src=\""
 					+await loadIcon(streamers[key][1]["game"])+"\" title=\""
-					+sanitize(streamers[key][1]["game"])+"\" class=\"masterTooltip\" width=\"30\" height=\"30\"/></td><td><span class=\"viewersclass\">"
+					+sanitize(streamers[key][1]["game"])+"\" class=\"masterTooltip\" width=\"30\" height=\"30\"/></a></td><td><span class=\"viewersclass\">"
 					+streamers[key][1]["viewers"]+"</span></td><td nowrap><span class=\"uptimeclass\">"
 					+getUptime(streamers[key][1]["created_at"])+"</span></td></tr>");
 				else
@@ -253,9 +253,9 @@ function updateTable() {
 					+sanitize(streamers[key][0])+"\"><td nowrap><a title=\""
 					+sanitize(streamers[key][1]["title"])+"\" class=\"streamerpage masterTooltip\" href=\""
 					+sanitize(streamers[key][1]["url"], defaultpage+key)+"\" target=\"_blank\">"
-					+sanitize(streamers[key][0])+"</a></td><td><img src=\""
+					+sanitize(streamers[key][0])+"</a></td><td><a href=\"https://www.twitch.tv/directory/category/"+(streamers[key][1]["game"]).toLowerCase().replace("&", "and").replaceAll(" ", "-")+"\"><img src=\""
 					+await loadIcon(streamers[key][1]["game"])+"\" title=\""
-					+sanitize(streamers[key][1]["game"])+"\" class=\"masterTooltip\" width=\"30\" height=\"30\"/></td><td><span class=\"viewersclass\">"
+					+sanitize(streamers[key][1]["game"])+"\" class=\"masterTooltip\" width=\"30\" height=\"30\"/></a></td><td><span class=\"viewersclass\">"
 					+streamers[key][1]["viewers"]+"</span></td><td nowrap><span class=\"uptimeclass\">"
 					+getUptime(streamers[key][1]["created_at"])+"</span></td></tr>");
 			}
@@ -535,6 +535,15 @@ function syncWithTwitch(pagination, storage, add){
 			var userID = getUserID(result)
 			if (userID > 0) {
 				twitchAPICall(1, userID, pagination).then(json => {
+					console.log(json)
+					if(json.status == 400){
+						$("#importTwitchFailMessage").html(json.error+" - "+json.message);
+						$("#importTwitchFailMessage").css("font-weight","bold");
+						$("#importTwitchFailMessage").css("color","red");
+						$("#importTwitchFailMessage").show();
+						document.getElementById("syncWithTwitchInput").value = '';
+						return;
+					}
 					if (json.data.length > 0) {
                         $("#importTwitchLoading").show();
 						for (var i = 0; i < json.data.length; i++) {
@@ -642,12 +651,9 @@ function unfollowAll(){
 // once the icon is loaded, set the icon_url in the local browser storage
 async function loadIcon(game) {
 	const base_url = "https://api.igdb.com/v4/";
-
-	// INSERT YOUR OWN CLIENT-ID AND AUTHORIZATION
-	// see https://api-docs.igdb.com/#getting-started for more information
 	var myHeaders = new Headers();
-	myHeaders.append("Client-ID", "xxx");
-	myHeaders.append("Authorization", "Bearer xxx");
+	myHeaders.append("Client-ID", "apdl4ch1qiwz3q02is8zi65gpvamij");       
+	myHeaders.append("Authorization", "Bearer bc609t7ul0jciogck0x98qm0ldvr9w");
 	myHeaders.append("Content-Type", "text/plain");
 
 	// hardcode non game related icons
