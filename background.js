@@ -3,6 +3,20 @@ var appClientID = "tn2qigcd7zaj1ivt1xbhw0fl2y99c4y";
 var OAuthState = getOAuthState();
 var OAuthAccessToken = '';
 var defaultpage = "https://twitch.tv/";
+var igdbClientID = "";
+var igdbClientSecret = "";
+
+// Load IGDB credentials from config file
+loadConfig().then(config => {
+    igdbClientID = config.igdb.clientId;
+    igdbClientSecret = config.igdb.clientSecret;
+    console.log('IGDB credentials loaded successfully');
+}).catch(error => {
+    console.error('Failed to load IGDB credentials:', error);
+});
+
+// Check IGDB token every 30 minutes
+browser.alarms.create("igdbTokenCheck", {periodInMinutes: 30});
 
 function addToStorage(channel, type, callback){
 	// Type = 0 Follow
@@ -90,6 +104,12 @@ browser.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 );
 
 browser.runtime.onStartup.addListener(function() {
+	// Initialize IGDB token on startup
+	checkAndRefreshIgdbToken();
+	
+	// Check and clear game icon cache daily
+	clearGameIconCacheDaily();
+	
 	browser.storage.local.get({streamers:{}, 'notifications':true}, function (result) {
 		streamers = result.streamers;
 		for (var key in streamers){
@@ -126,6 +146,12 @@ browser.runtime.onUpdateAvailable.addListener(function (){
 });
 
 browser.runtime.onInstalled.addListener(function () {
+	// Initialize IGDB token on installation
+	checkAndRefreshIgdbToken();
+	
+	// Check and clear game icon cache daily
+	clearGameIconCacheDaily();
+	
 	browser.storage.local.get({streamers:{},'notifications':true,'add':true}, function (result) {
 		streamers = result.streamers;
 		for (var key in streamers){
@@ -169,8 +195,12 @@ browser.notifications.onButtonClicked.addListener(function(notifId, btnIdx) {
 	}
 });
 
-browser.alarms.onAlarm.addListener(function() {
-	updateCore(0,function(){});
+browser.alarms.onAlarm.addListener(function(alarm) {
+	if (alarm.name === "igdbTokenCheck") {
+		checkAndRefreshIgdbToken();
+	} else {
+		updateCore(0,function(){});
+	}
 });
 
 function getFollowing(){
@@ -248,6 +278,135 @@ async function validateOAuthAccessToken(token){
 		method: 'GET'
 	});
 	return response.json();
+}
+
+// IGDB Token Management Functions for Background Script
+async function checkAndRefreshIgdbToken() {
+	browser.storage.local.get({igdb_access_token: '', igdb_token_expires_at: 0}, async function (result) {
+		const now = Date.now();
+		// Check if token is missing or will expire in the next 10 minutes
+		if (!result.igdb_access_token || now >= (result.igdb_token_expires_at - 600000)) {
+			console.log('IGDB token refresh needed, refreshing...');
+			await refreshIgdbTokenBackground();
+		}
+	});
+}
+
+async function refreshIgdbTokenBackground() {
+	try {
+		const tokenData = await getNewIgdbTokenBackground();
+		if (tokenData && tokenData.access_token) {
+			const expiresAt = Date.now() + (tokenData.expires_in * 1000);
+			
+			// Store in browser storage
+			browser.storage.local.set({
+				igdb_access_token: tokenData.access_token,
+				igdb_token_expires_at: expiresAt
+			});
+			
+			console.log('IGDB token refreshed successfully in background');
+		}
+	} catch (error) {
+		console.error('Failed to refresh IGDB token in background:', error);
+	}
+}
+
+async function getNewIgdbTokenBackground() {
+	// Ensure credentials are loaded
+	if (!igdbClientID || !igdbClientSecret) {
+		const config = await loadConfig();
+		igdbClientID = config.igdb.clientId;
+		igdbClientSecret = config.igdb.clientSecret;
+	}
+	
+	const url = 'https://id.twitch.tv/oauth2/token';
+	const params = new URLSearchParams({
+		client_id: igdbClientID,
+		client_secret: igdbClientSecret,
+		grant_type: 'client_credentials'
+	});
+
+	const response = await fetch(url, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded'
+		},
+		body: params
+	});
+
+	if (!response.ok) {
+		throw new Error(`HTTP error! status: ${response.status}`);
+	}
+
+	return response.json();
+}
+
+// Daily Game Icon Cache Cleanup
+async function clearGameIconCacheDaily() {
+	browser.storage.local.get({last_cache_cleanup: 0}, function (result) {
+		const now = Date.now();
+		const lastCleanup = result.last_cache_cleanup;
+		const oneDayInMs = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+		
+		// Check if more than 24 hours have passed since last cleanup
+		if (now - lastCleanup >= oneDayInMs) {
+			console.log('Clearing game icon cache - daily cleanup');
+			clearGameIconCache().then(() => {
+				// Update the last cleanup timestamp
+				browser.storage.local.set({last_cache_cleanup: now});
+				console.log('Game icon cache cleared successfully');
+			}).catch((error) => {
+				console.error('Failed to clear game icon cache:', error);
+			});
+		} else {
+			const hoursUntilNextCleanup = Math.ceil((oneDayInMs - (now - lastCleanup)) / (60 * 60 * 1000));
+			console.log(`Game icon cache cleanup not needed. Next cleanup in ${hoursUntilNextCleanup} hours.`);
+		}
+	});
+}
+
+async function clearGameIconCache() {
+	return new Promise((resolve, reject) => {
+		// Get all storage items
+		browser.storage.local.get(null, function (allItems) {
+			if (browser.runtime.lastError) {
+				reject(browser.runtime.lastError);
+				return;
+			}
+			
+			// Identify game icon cache keys (game names that have URLs as values)
+			const keysToRemove = [];
+			const protectedKeys = [
+				'streamers', 'notifications', 'access_token', 'darkmode', 'sortMethod', 'add',
+				'igdb_access_token', 'igdb_token_expires_at', 'last_cache_cleanup'
+			];
+			
+			for (const key in allItems) {
+				if (!protectedKeys.includes(key)) {
+					const value = allItems[key];
+					// Check if the value looks like a cached game icon (URL or path)
+					if (typeof value === 'string' && 
+						(value.startsWith('https://') || value.startsWith('gameicons/'))) {
+						keysToRemove.push(key);
+					}
+				}
+			}
+			
+			if (keysToRemove.length > 0) {
+				console.log(`Removing ${keysToRemove.length} cached game icons:`, keysToRemove);
+				browser.storage.local.remove(keysToRemove, function () {
+					if (browser.runtime.lastError) {
+						reject(browser.runtime.lastError);
+					} else {
+						resolve();
+					}
+				});
+			} else {
+				console.log('No game icon cache entries found to remove');
+				resolve();
+			}
+		});
+	});
 }
 
 async function twitchAPIBackgroundCall(type, channels){

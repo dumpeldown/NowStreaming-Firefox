@@ -2,3 +2,11 @@
 /addon.zip
 zip.cmd
 zipExclude.txt
+
+# Secrets and configuration files
+secrets.js
+
+# Development files
+*.log
+*.tmp
+*.tmp1

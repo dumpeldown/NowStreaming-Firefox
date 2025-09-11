@@ -2,6 +2,7 @@
 <html #htmlBody>
 	<head>
 		<script src="jquery-3.6.0.min.js"></script>
+		<script src="config-loader.js"></script>
 		<script src="popup.js"></script>
 		<link rel="stylesheet" type="text/css" href="popup.css">
 		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
@@ -77,6 +78,36 @@
 				<i #themeSwitch class="theme-button fas fa-adjust"></i>
 				Theme
 			</div>
+		</div>
+		
+		<div class="igdb-credentials-area" id="igdbCredentialsArea">
+			<div class="credentials-header">
+				<h4>IGDB API Credentials</h4>
+				<div class="credentials-status" id="credentialsStatus"></div>
+			</div>
+			<div class="credentials-inputs">
+				<input id="igdbClientId" class="inputclass" type="text" placeholder="IGDB Client ID" />
+				<input id="igdbClientSecret" class="inputclass" type="password" placeholder="IGDB Client Secret" />
+				<button class="masterTooltip" id="saveCredentials" title="Save your IGDB API credentials">
+					<i class="fas fa-save"></i>
+					Save Credentials
+				</button>
+			</div>
+			<div class="credentials-info">
+				<div>Get your credentials from <a href="https://api-docs.igdb.com/#account-creation" target="_blank">Twitch Developer Portal</a></div>
+			</div>
+		</div>
+
+		<div class="igdb-refresh-area" id="igdbRefreshArea">
+			<button class="masterTooltip" id="refreshIgdbToken" title="Refresh IGDB token for game icons">
+				<i class="fas fa-sync-alt"></i>
+				Refresh Game Icons Token
+			</button>
+			<button class="masterTooltip" id="clearGameIconCache" title="Clear all cached game icons to force fresh downloads">
+				<i class="fas fa-trash-alt"></i>
+				Clear Game Icons Cache
+			</button>
+			<div class="igdb-status" id="igdbTokenStatus"></div>
 		</div>
 		
 		<div class="import-twitch">

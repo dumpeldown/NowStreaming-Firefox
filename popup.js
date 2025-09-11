@@ -5,6 +5,19 @@ var defaultSort = 3;
 var appClientID = "tn2qigcd7zaj1ivt1xbhw0fl2y99c4y";
 var OAuthAccessToken = '';
 var defaultpage = "https://twitch.tv/";
+var igdbAccessToken = '';
+var igdbTokenExpiresAt = 0;
+var igdbClientID = "";
+var igdbClientSecret = "";
+
+// Load IGDB credentials from config file
+loadConfig().then(config => {
+    igdbClientID = config.igdb.clientId;
+    igdbClientSecret = config.igdb.clientSecret;
+    console.log('IGDB credentials loaded in popup');
+}).catch(error => {
+    console.error('Failed to load IGDB credentials in popup:', error);
+});
 
 $(document).ready(function () {
 	$("#optionsDiv").hide();
@@ -124,9 +137,14 @@ $(document).ready(function () {
     $("#authenticate").bind("click",authenticate);
 	$("#submitData").bind("click", importData);
 	$("#submitFastFollow").bind("click", fastFollow);
+	$("#refreshIgdbToken").bind("click", refreshIgdbToken);
+	$("#clearGameIconCache").bind("click", clearGameIconCacheManual);
+	$("#saveCredentials").bind("click", saveIgdbCredentials);
 
 	$("#versionDiv").append(browser.runtime.getManifest().version);
 
+	initializeIgdbToken();
+	loadCredentialsUI();
 	updateTable();
 	updateTheme();
 });
@@ -184,11 +202,11 @@ function updateTable() {
 				// Sort by uptime
 				streamersArray.sort(function(first, second) {
 					if (first[1]["created_at"] == "null")
-						firstDate = new Date (1970,01);
+						firstDate = new Date (1970,1);
 					else
 						firstDate = new Date(first[1]["created_at"]);
 					if (second[1]["created_at"] == "null")
-						secondDate = new Date(1970,01);
+						secondDate = new Date(1970,1);
 					else
 						secondDate = new Date(second[1]["created_at"]);
 		
@@ -644,16 +662,238 @@ function unfollowAll(){
 	onForceUpdate();
 }
 
-// Asynconously Load the icon for the game from IGDB API as https url
+// IGDB Token Management Functions
+async function initializeIgdbToken() {
+	// Load stored token and expiration from browser storage
+	browser.storage.local.get({igdb_access_token: '', igdb_token_expires_at: 0}, function (result) {
+		igdbAccessToken = result.igdb_access_token;
+		igdbTokenExpiresAt = result.igdb_token_expires_at;
+		
+		// Check if token exists and is not expired
+		const now = Date.now();
+		if (!igdbAccessToken || now >= igdbTokenExpiresAt) {
+			// Token is missing or expired, get a new one
+			refreshIgdbToken();
+		} else {
+			updateIgdbTokenStatus('Token valid');
+		}
+	});
+}
+
+async function refreshIgdbToken() {
+	updateIgdbTokenStatus('Refreshing token...');
+	
+	try {
+		const tokenData = await getNewIgdbToken();
+		if (tokenData && tokenData.access_token) {
+			igdbAccessToken = tokenData.access_token;
+			// Token expires in seconds, convert to milliseconds and add current time
+			igdbTokenExpiresAt = Date.now() + (tokenData.expires_in * 1000);
+			
+			// Store in browser storage
+			browser.storage.local.set({
+				igdb_access_token: igdbAccessToken,
+				igdb_token_expires_at: igdbTokenExpiresAt
+			});
+			
+			updateIgdbTokenStatus('Token refreshed successfully');
+			console.log('IGDB token refreshed successfully');
+		} else {
+			throw new Error('Invalid token response');
+		}
+	} catch (error) {
+		console.error('Failed to refresh IGDB token:', error);
+		updateIgdbTokenStatus('Token refresh failed');
+		igdbAccessToken = '';
+		igdbTokenExpiresAt = 0;
+	}
+}
+
+async function getNewIgdbToken() {
+	// Ensure credentials are loaded
+	if (!igdbClientID || !igdbClientSecret) {
+		const config = await loadConfig();
+		igdbClientID = config.igdb.clientId;
+		igdbClientSecret = config.igdb.clientSecret;
+	}
+	
+	const url = 'https://id.twitch.tv/oauth2/token';
+	const params = new URLSearchParams({
+		client_id: igdbClientID,
+		client_secret: igdbClientSecret,
+		grant_type: 'client_credentials'
+	});
+
+	console.log('Requesting new IGDB token...');
+	console.log('URL:', url);
+	console.log('Params:', params.toString());
+
+	const response = await fetch(url, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded'
+		},
+		body: params
+	});
+
+	if (!response.ok) {
+		throw new Error(`HTTP error! status: ${response.status}`);
+	}
+
+	return response.json();
+}
+
+async function ensureValidIgdbToken() {
+	const now = Date.now();
+	// Check if token is expired or will expire in the next 5 minutes
+	if (!igdbAccessToken || now >= (igdbTokenExpiresAt - 300000)) {
+		await refreshIgdbToken();
+	}
+	return igdbAccessToken;
+}
+
+function updateIgdbTokenStatus(message) {
+	const statusElement = document.getElementById('igdbTokenStatus');
+	if (statusElement) {
+		statusElement.textContent = message;
+		// Clear status message after 3 seconds for non-error messages
+		if (!message.includes('failed')) {
+			setTimeout(() => {
+				statusElement.textContent = '';
+			}, 3000);
+		}
+	}
+}
+
+async function clearGameIconCacheManual() {
+	updateIgdbTokenStatus('Clearing cache...');
+	
+	try {
+		// Get all storage items
+		browser.storage.local.get(null, function (allItems) {
+			// Identify game icon cache keys
+			const keysToRemove = [];
+			const protectedKeys = [
+				'streamers', 'notifications', 'access_token', 'darkmode', 'sortMethod', 'add',
+				'igdb_access_token', 'igdb_token_expires_at', 'last_cache_cleanup'
+			];
+			
+			for (const key in allItems) {
+				if (!protectedKeys.includes(key)) {
+					const value = allItems[key];
+					// Check if the value looks like a cached game icon
+					if (typeof value === 'string' && 
+						(value.startsWith('https://') || value.startsWith('gameicons/'))) {
+						keysToRemove.push(key);
+					}
+				}
+			}
+			
+			if (keysToRemove.length > 0) {
+				browser.storage.local.remove(keysToRemove, function () {
+					if (browser.runtime.lastError) {
+						updateIgdbTokenStatus('Cache clear failed');
+						console.error('Failed to clear cache:', browser.runtime.lastError);
+					} else {
+						updateIgdbTokenStatus(`Cleared ${keysToRemove.length} cached icons`);
+						console.log(`Cleared ${keysToRemove.length} cached game icons:`, keysToRemove);
+					}
+				});
+			} else {
+				updateIgdbTokenStatus('No cached icons found');
+			}
+		});
+	} catch (error) {
+		console.error('Failed to clear game icon cache:', error);
+		updateIgdbTokenStatus('Cache clear failed');
+	}
+}
+
+async function loadCredentialsUI() {
+	try {
+		// Load current credentials to show in UI (but not the secret)
+		browser.storage.local.get(['igdb_client_id'], function(result) {
+			if (result.igdb_client_id) {
+				document.getElementById('igdbClientId').value = result.igdb_client_id;
+			}
+		});
+	} catch (error) {
+		console.error('Failed to load credentials UI:', error);
+		updateCredentialsStatus('Error loading credentials');
+	}
+}
+function updateCredentialsStatus(message) {
+	const statusElement = document.getElementById('credentialsStatus');
+	if (statusElement) {
+		statusElement.textContent = message;
+		// Clear status message after 5 seconds for non-error messages
+		if (!message.includes('Error') && !message.includes('Failed')) {
+			setTimeout(() => {
+				statusElement.textContent = '';
+			}, 5000);
+		}
+	}
+}
+
+async function saveIgdbCredentials() {
+	const clientId = document.getElementById('igdbClientId').value.trim();
+	const clientSecret = document.getElementById('igdbClientSecret').value.trim();
+	
+	if (!clientId || !clientSecret) {
+		updateCredentialsStatus('Please enter both Client ID and Client Secret');
+		return;
+	}
+	
+	try {
+		updateCredentialsStatus('Saving credentials...');
+		await saveConfigToStorage(clientId, clientSecret);
+		updateCredentialsStatus('Credentials saved successfully!');
+		
+		// Clear the secret field for security
+		document.getElementById('igdbClientSecret').value = '';
+		
+		// Refresh the token with new credentials
+		setTimeout(() => {
+			refreshIgdbToken();
+		}, 1000);
+		
+	} catch (error) {
+		console.error('Failed to save credentials:', error);
+		updateCredentialsStatus('Failed to save credentials');
+	}
+}
+
+// Asynchronously Load the icon for the game from IGDB API as https url
 // to avoid wrong games found when using "search by name", we use the total_rating to filter for the probably correct game
 // some games icons are hardcoded because they are not found in IGDB
 // If the game is not found, return the default icon
 // once the icon is loaded, set the icon_url in the local browser storage
 async function loadIcon(game) {
 	const base_url = "https://api.igdb.com/v4/";
+	
+	// Ensure we have a valid token before making the API call
+	try {
+		await ensureValidIgdbToken();
+	} catch (error) {
+		console.error('Failed to get valid IGDB token:', error);
+		return "gameicons/unknown.png";
+	}
+	
+	// Ensure credentials are loaded
+	if (!igdbClientID) {
+		try {
+			const config = await loadConfig();
+			igdbClientID = config.igdb.clientId;
+			igdbClientSecret = config.igdb.clientSecret;
+		} catch (error) {
+			console.error('Failed to load IGDB credentials:', error);
+			return "gameicons/unknown.png";
+		}
+	}
+	
 	var myHeaders = new Headers();
-	myHeaders.append("Client-ID", "apdl4ch1qiwz3q02is8zi65gpvamij");       
-	myHeaders.append("Authorization", "Bearer bc609t7ul0jciogck0x98qm0ldvr9w");
+	myHeaders.append("Client-ID", igdbClientID);       
+	myHeaders.append("Authorization", "Bearer " + igdbAccessToken);
 	myHeaders.append("Content-Type", "text/plain");
 
 	// hardcode non game related icons
@@ -694,14 +934,21 @@ async function loadIcon(game) {
 
 	return fetch(base_url+"games", requestOptions)
 		.then((response) => {
+			if (!response.ok) {
+				throw new Error(`IGDB API error: ${response.status}`);
+			}
 			return response.json();
 		})
 		.then((data) => {
 			console.log(JSON.stringify(data, null, 2)); // spacing level = 2
 			// build usable url from api data and store in browser storage
-			var url = "https://"+(data[0].cover.url).substring(2);
-			browser.storage.local.set({[game]: url})
-			return url;
+			if (data && data.length > 0 && data[0].cover && data[0].cover.url) {
+				var url = "https://"+(data[0].cover.url).substring(2);
+				browser.storage.local.set({[game]: url})
+				return url;
+			} else {
+				throw new Error('No cover image found in API response');
+			}
 		})
 		.catch((error) => {
 			// if api returns no results, return default/unknown icon, log to console and alert user.
@@ -718,13 +965,20 @@ async function loadIcon(game) {
 			};
 			return fetch(base_url+"games", requestOptions)
 				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`IGDB API error: ${response.status}`);
+					}
 					return response.json();
 				})
 				.then((data) => {
 					console.log(JSON.stringify(data, null, 2));
-					var url = "https://"+(data[0].cover.url).substring(2);
-					browser.storage.local.set({[game]: url})
-					return url;
+					if (data && data.length > 0 && data[0].cover && data[0].cover.url) {
+						var url = "https://"+(data[0].cover.url).substring(2);
+						browser.storage.local.set({[game]: url})
+						return url;
+					} else {
+						throw new Error('No cover image found in fallback API response');
+					}
 				})
 				.catch((error) => {
 					console.log('error', error);

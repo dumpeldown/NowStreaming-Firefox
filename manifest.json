@@ -13,7 +13,7 @@
 	"author": "Jota",
 
 	"background": {
-		"scripts": ["background.js"]
+		"scripts": ["config-loader.js", "background.js"]
 	},
 
 	"icons": {
@@ -38,5 +38,10 @@
 		"https://id.twitch.tv/*",
 		"https://*.jtvnw.net/*",
 		"https://api.igdb.com/*"
+	],
+
+	"web_accessible_resources": [
+		"config.json",
+		"config.js"
 	]
 }

@@ -318,7 +318,8 @@ body .fast-follow-message {
 }
 .optionsDiv .management-area {
   display: grid;
-  grid-template-columns: 1fr 1fr min-content;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
   grid-gap: 12px;
   padding-bottom: 8px;
 }
@@ -352,6 +353,92 @@ body .fast-follow-message {
 }
 .optionsDiv .management-area .theme-area .theme-button{
   padding-right: 4px;
+}
+.optionsDiv .igdb-credentials-area {
+  display: grid;
+  grid-gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--import-border);
+  border-radius: 8px;
+  margin: 8px 0;
+}
+.optionsDiv .igdb-credentials-area .credentials-header {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-gap: 4px;
+}
+.optionsDiv .igdb-credentials-area .credentials-header h4 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-color);
+}
+.optionsDiv .igdb-credentials-area .credentials-status {
+  font-size: 11px;
+  color: var(--accept);
+  font-style: italic;
+}
+.optionsDiv .igdb-credentials-area .credentials-inputs {
+  display: grid;
+  grid-gap: 8px;
+}
+.optionsDiv .igdb-credentials-area .credentials-inputs input {
+  padding: 8px;
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  background: var(--input-background);
+  color: var(--input-text);
+}
+.optionsDiv .igdb-credentials-area .credentials-inputs button {
+  background: var(--tab-background);
+  border: 1px solid var(--import-border);
+  border-radius: 4px;
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 8px 12px;
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+.optionsDiv .igdb-credentials-area .credentials-inputs button:hover {
+  background: var(--tab-background-selected);
+  color: var(--selection);
+}
+.optionsDiv .igdb-credentials-area .credentials-info {
+  font-size: 11px;
+  color: var(--text-color);
+  opacity: 0.7;
+}
+.optionsDiv .igdb-credentials-area .credentials-info a {
+  color: var(--selection);
+  text-decoration: none;
+}
+.optionsDiv .igdb-credentials-area .credentials-info a:hover {
+  text-decoration: underline;
+}
+.optionsDiv .management-area .igdb-refresh-area {
+  display: grid;
+  grid-gap: 8px;
+  justify-self: center;
+  align-content: center;
+}
+.optionsDiv .management-area .igdb-refresh-area button {
+  background: var(--tab-background);
+  border: 1px solid var(--import-border);
+  border-radius: 4px;
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 6px 10px;
+  font-size: 11px;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+.optionsDiv .management-area .igdb-refresh-area button:hover {
+  background: var(--tab-background-selected);
+  color: var(--selection);
+}
+.optionsDiv .management-area .igdb-refresh-area .igdb-status {
+  font-size: 10px;
+  text-align: center;
+  color: var(--accept);
 }
 .optionsDiv .import-twitch {
   display: grid;
